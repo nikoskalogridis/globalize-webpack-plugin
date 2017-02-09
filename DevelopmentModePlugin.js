@@ -55,7 +55,18 @@ DevelopmentModePlugin.prototype.apply = function(compiler) {
         dep.loc = expr.loc;
         dep.optional = !!this.scope.inTry;
         this.state.current.addDependency(dep);
+        return true;
+      }
+    });
+    parser.plugin("import", function(statement, source) {
+      var request = this.state.current.request;
 
+      if(source === "globalize" && moduleFilter(request) &&
+        !(new RegExp(util.escapeRegex(i18nData))).test(request)) {
+        var dep = new CommonJsRequireDependency(i18nData, source.range);
+        dep.loc = statement.loc;
+        dep.optional = !!this.scope.inTry;
+        this.state.current.addDependency(dep);
         return true;
       }
     });
