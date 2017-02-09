@@ -1,4 +1,6 @@
 var CommonJsRequireDependency = require("webpack/lib/dependencies/CommonJsRequireDependency");
+var HarmonyImportDependency = require("webpack/lib/dependencies/HarmonyImportDependency");
+var HarmonyModulesHelpers = require("webpack/lib/dependencies/HarmonyModulesHelpers");
 var fs = require("fs");
 var path = require("path");
 var SkipAMDPlugin = require("skip-amd-webpack-plugin");
@@ -58,7 +60,19 @@ DevelopmentModePlugin.prototype.apply = function(compiler) {
 
           return true;
         }
-      })
+      });
+      parser.plugin("import", function(statement, source) {
+        var request = this.state.current.request;
+
+        if(source === "globalize" && moduleFilter(request) &&
+          !(new RegExp(util.escapeRegex(i18nData))).test(request)) {
+          var dep = new HarmonyImportDependency(i18nData, HarmonyModulesHelpers.getNewModuleVar(parser.state, source), statement.range);
+          dep.loc = statement.loc;
+          parser.state.current.addDependency(dep);
+          parser.state.lastHarmonyImport = dep;
+          return true;
+        }
+      });
     })
   });
 };
